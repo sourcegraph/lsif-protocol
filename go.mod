@@ -3,6 +3,7 @@ module github.com/sourcegraph/lsif-protocol
 go 1.12
 
 require (
+	github.com/google/go-cmp v0.5.2
 	github.com/json-iterator/go v1.1.10
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
