@@ -1,4 +1,4 @@
-package lsif
+package reader
 
 type Element struct {
 	ID      int
