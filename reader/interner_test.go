@@ -1,6 +1,9 @@
 package reader
 
-import "testing"
+import (
+	"strconv"
+	"testing"
+)
 
 func TestInterner(t *testing.T) {
 	testCases := [][][]byte{
@@ -72,4 +75,177 @@ func TestInterner(t *testing.T) {
 			}
 		}
 	}
+}
+
+// da global variable
+var i = 0
+
+func BenchmarkInterner(b *testing.B) {
+	/* testCases := [][]byte{
+		[]byte(`"rectangle"`),
+		[]byte(`"america"`),
+		[]byte(`"megaphone"`),
+		[]byte(`"monday"`),
+		[]byte(`"the next word"`),
+		[]byte(`"rectangle"`),
+		[]byte(`"america"`),
+		[]byte(`"megaphone"`),
+		[]byte(`"monday"`),
+		[]byte(`"the next word"`),
+		[]byte(`keno`),
+		[]byte(`kindergartener`),
+		[]byte(`newscasting`),
+		[]byte(`malignly`),
+		[]byte(`metallophone`),
+		[]byte(`pantagraph`),
+		[]byte(`remuda`),
+		[]byte(`demagogue`),
+		[]byte(`immobile`),
+		[]byte(`militarised`),
+		[]byte(`monument`),
+		[]byte(`nonvictory`),
+		[]byte(`compossible`),
+		[]byte(`valence`),
+		[]byte(`dragonlike`),
+		[]byte(`ecocide`),
+		[]byte(`southwester`),
+		[]byte(`fellation`),
+		[]byte(`naseby`),
+		[]byte(`anglicisation`),
+		[]byte(`bacteriostat`),
+		[]byte(`bouclï¿¥ï¾½`),
+		[]byte(`chemokinetic`),
+		[]byte(`unleasable`),
+		[]byte(`silviculturist`),
+		[]byte(`grishun`),
+		[]byte(`fugitiveness`),
+		[]byte(`"megaphone"`),
+		[]byte(`"monday"`),
+		[]byte(`"the next word"`),
+		[]byte(`keno`),
+		[]byte(`kindergartener`),
+		[]byte(`newscasting`),
+		[]byte(`bouclï¿¥ï¾½`),
+		[]byte(`chemokinetic`),
+		[]byte(`unleasable`),
+		[]byte(`malignly`),
+		[]byte(`metallophone`),
+		[]byte(`pantagraph`),
+		[]byte(`remuda`),
+		[]byte(`demagogue`),
+		[]byte(`immobile`),
+		[]byte(`militarised`),
+		[]byte(`monument`),
+		[]byte(`nonvictory`),
+	} */
+
+	b.StopTimer()
+	interner := NewInterner()
+	b.StartTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			//returned := []int{}
+			for n := 0; n < 50000000; n++ {
+				//for _, by := range testCases {
+
+				str := []byte(`"` + strconv.Itoa(n) + `"`)
+				i, _ = interner.Intern(str)
+
+				//returned = append(returned, i)
+			}
+			for n := 0; n < 50000000; n++ {
+				//for _, by := range testCases {
+
+				str := []byte(`"` + strconv.Itoa(n) + `"`)
+				i, _ = interner.Intern(str)
+
+				//returned = append(returned, i)
+			}
+		}
+	})
+}
+
+func BenchmarkSyncInterner(b *testing.B) {
+	/* testCases := [][]byte{
+		[]byte(`"rectangle"`),
+		[]byte(`"america"`),
+		[]byte(`"megaphone"`),
+		[]byte(`"monday"`),
+		[]byte(`"the next word"`),
+		[]byte(`"rectangle"`),
+		[]byte(`"america"`),
+		[]byte(`"megaphone"`),
+		[]byte(`"monday"`),
+		[]byte(`"the next word"`),
+		[]byte(`keno`),
+		[]byte(`kindergartener`),
+		[]byte(`newscasting`),
+		[]byte(`malignly`),
+		[]byte(`metallophone`),
+		[]byte(`pantagraph`),
+		[]byte(`remuda`),
+		[]byte(`demagogue`),
+		[]byte(`immobile`),
+		[]byte(`militarised`),
+		[]byte(`monument`),
+		[]byte(`nonvictory`),
+		[]byte(`compossible`),
+		[]byte(`valence`),
+		[]byte(`dragonlike`),
+		[]byte(`ecocide`),
+		[]byte(`southwester`),
+		[]byte(`fellation`),
+		[]byte(`naseby`),
+		[]byte(`anglicisation`),
+		[]byte(`bacteriostat`),
+		[]byte(`bouclï¿¥ï¾½`),
+		[]byte(`chemokinetic`),
+		[]byte(`unleasable`),
+		[]byte(`silviculturist`),
+		[]byte(`grishun`),
+		[]byte(`fugitiveness`),
+		[]byte(`"megaphone"`),
+		[]byte(`"monday"`),
+		[]byte(`"the next word"`),
+		[]byte(`keno`),
+		[]byte(`kindergartener`),
+		[]byte(`newscasting`),
+		[]byte(`bouclï¿¥ï¾½`),
+		[]byte(`chemokinetic`),
+		[]byte(`unleasable`),
+		[]byte(`malignly`),
+		[]byte(`metallophone`),
+		[]byte(`pantagraph`),
+		[]byte(`remuda`),
+		[]byte(`demagogue`),
+		[]byte(`immobile`),
+		[]byte(`militarised`),
+		[]byte(`monument`),
+		[]byte(`nonvictory`),
+	} */
+
+	b.StopTimer()
+	interner := NewLockfreeInterner()
+	b.StartTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			//returned := []int{}
+			for n := 0; n < 50000000; n++ {
+				//for _, by := range testCases {
+
+				str := []byte(`"` + strconv.Itoa(n) + `"`)
+				i, _ = interner.Intern(str)
+
+				//returned = append(returned, i)
+			}
+			for n := 0; n < 50000000; n++ {
+				//for _, by := range testCases {
+
+				str := []byte(`"` + strconv.Itoa(n) + `"`)
+				i, _ = interner.Intern(str)
+
+				//returned = append(returned, i)
+			}
+		}
+	})
 }
