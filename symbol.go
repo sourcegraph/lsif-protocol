@@ -5,9 +5,9 @@ package protocol
 type RangeSymbolTag struct {
 	Type      string     `json:"type"`
 	Text      string     `json:"text"`
+	Detail    string     `json:"detail,omitempty"`
 	Kind      SymbolKind `json:"kind"`
 	FullRange *RangeData `json:"fullRange,omitempty"`
-	Detail    string     `json:"detail,omitempty"`
 }
 
 type RangeBasedDocumentSymbol struct {
