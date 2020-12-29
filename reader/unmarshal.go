@@ -325,6 +325,7 @@ func UnmarshalDocumentSymbolResult(interner *Interner, line []byte) (interface{}
 		Kind           protocol.SymbolKind  `json:"kind"`
 		Tags           []protocol.SymbolTag `json:"tags"`
 		Children       []_result            `json:"children"`
+		Parent         uint64               `json:"parent"`
 	}
 	var payload struct {
 		Results []_result `json:"result"`
@@ -351,6 +352,7 @@ func UnmarshalDocumentSymbolResult(interner *Interner, line []byte) (interface{}
 		return protocol.RangeBasedDocumentSymbol{
 			ID:       uint64(id), // TODO(sqs): sketchy conversion
 			Children: children,
+			Parent:   item.Parent,
 		}
 	}
 
@@ -377,6 +379,7 @@ func UnmarshalDocumentSymbolResult(interner *Interner, line []byte) (interface{}
 			Range:          toRange(item.Range),
 			SelectionRange: toRange(item.SelectionRange),
 			Children:       children,
+			Parent:         item.Parent,
 		}
 	}
 

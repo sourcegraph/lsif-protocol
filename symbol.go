@@ -24,6 +24,7 @@ type DocumentSymbol struct {
 	Range          RangeData        `json:"range"`
 	SelectionRange RangeData        `json:"selectionRange"`
 	Children       []DocumentSymbol `json:"children,omitempty"`
+	Parent         uint64           `json:"parent,omitempty"`
 }
 
 type SymbolKind int
