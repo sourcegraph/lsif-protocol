@@ -49,3 +49,19 @@ type Diagnostic struct {
 	EndLine        int
 	EndCharacter   int
 }
+
+type RangeBasedDocumentSymbol struct {
+	ID       int
+	Children []RangeBasedDocumentSymbol
+}
+
+type RangeSymbolTag struct {
+	Type                    string
+	Text                    string
+	Kind                    int
+	FullRangeStartLine      int
+	FullRangeStartCharacter int
+	FullRangeEndLine        int
+	FullRangeEndCharacter   int
+	Detail                  string
+}

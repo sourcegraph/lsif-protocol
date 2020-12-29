@@ -40,7 +40,14 @@ func (e *Emitter) EmitDocument(languageID, path string) uint64 {
 
 func (e *Emitter) EmitRange(start, end protocol.Pos) uint64 {
 	id := e.nextID()
-	e.writer.Write(protocol.NewRange(id, start, end))
+	e.writer.Write(protocol.NewRange(id, start, end, nil))
+	return id
+}
+
+// EmitRangeWithTag emits a range with a "tag" property describing a symbol.
+func (e *Emitter) EmitRangeWithTag(start, end protocol.Pos, tag *protocol.RangeSymbolTag) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewRange(id, start, end, tag))
 	return id
 }
 
@@ -125,6 +132,28 @@ func (e *Emitter) EmitPackageInformation(packageName, scheme, version string) ui
 func (e *Emitter) EmitPackageInformationEdge(outV, inV uint64) uint64 {
 	id := e.nextID()
 	e.writer.Write(protocol.NewPackageInformationEdge(id, outV, inV))
+	return id
+}
+
+func (e *Emitter) EmitDocumentSymbolResult(result0 []protocol.RangeBasedDocumentSymbol, result1 []protocol.DocumentSymbol) uint64 {
+	var result interface{}
+	switch {
+	case result0 != nil && result1 == nil:
+		result = result0
+	case result0 == nil && result1 != nil:
+		result = result1
+	default:
+		panic("exactly 1 result may be specified")
+	}
+
+	id := e.nextID()
+	e.writer.Write(protocol.NewDocumentSymbolResult(id, result))
+	return id
+}
+
+func (e *Emitter) EmitTextDocumentDocumentSymbolEdge(outV, inV uint64) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewTextDocumentDocumentSymbolEdge(id, outV, inV))
 	return id
 }
 
