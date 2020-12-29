@@ -1,5 +1,7 @@
 package reader
 
+import protocol "github.com/sourcegraph/lsif-protocol"
+
 type Element struct {
 	ID      int
 	Type    string
@@ -20,10 +22,8 @@ type MetaData struct {
 }
 
 type Range struct {
-	StartLine      int
-	StartCharacter int
-	EndLine        int
-	EndCharacter   int
+	protocol.RangeData
+	Tag *protocol.RangeSymbolTag `json:"tag,omitempty"`
 }
 
 type ResultSet struct{}
@@ -50,18 +50,8 @@ type Diagnostic struct {
 	EndCharacter   int
 }
 
-type RangeBasedDocumentSymbol struct {
-	ID       int
-	Children []RangeBasedDocumentSymbol
-}
-
-type RangeSymbolTag struct {
-	Type                    string
-	Text                    string
-	Kind                    int
-	FullRangeStartLine      int
-	FullRangeStartCharacter int
-	FullRangeEndLine        int
-	FullRangeEndCharacter   int
-	Detail                  string
+type SymbolResultList struct {
+	// At most 1 can be non-zero.
+	RangeBased []protocol.RangeBasedDocumentSymbol
+	Inline     []protocol.DocumentSymbol
 }

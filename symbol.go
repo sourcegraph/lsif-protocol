@@ -5,14 +5,15 @@ package protocol
 type RangeSymbolTag struct {
 	Type      string     `json:"type"`
 	Text      string     `json:"text"`
-	Kind      string     `json:"kind"`
+	Kind      SymbolKind `json:"kind"`
 	FullRange *RangeData `json:"fullRange,omitempty"`
 	Detail    string     `json:"detail,omitempty"`
 }
 
 type RangeBasedDocumentSymbol struct {
-	ID       int64                      `json:"id"`
+	ID       uint64                     `json:"id"`
 	Children []RangeBasedDocumentSymbol `json:"children,omitempty"`
+	Parent   uint64                     `json:"parent,omitempty"`
 }
 
 type DocumentSymbol struct {
