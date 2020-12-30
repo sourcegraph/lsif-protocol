@@ -982,6 +982,10 @@ The Language Server Protocol supports requests (such as `workspace/symbol`) that
 
 ### <a href="#workspaceSymbol" name="workspaceSymbol" class="anchor">Request: `workspace/symbol`</a>
 
+<!-- TODO(sqs)
+Also use `contains` edge for document symbols.
+-->
+
 The `workspace/symbol` request returns all symbols in the workspace. <!-- TODO(sqs): it still uses the old SymbolInformation, which doesn't support hierarchies. --> To model each project's symbols, we attach each project's top-level symbols to its `project` vertex using a `workspace/symbol` edge. The edge can point to `symbol` vertices, `documentSymbolResult` vertices, and ranges with tags describing a symbol (and any combination of these). The `workspace/symbol` result is the union of all symbols from all projects in the workspace.
 
 The `symbol` vertex lets you define a symbol that does not correspond to a single document range (such as a module spanning multiple documents). The `symbol`  vertex can have `contain` edges to define its child symbols (referring to the same types of vertices that the project's `contains` edge allows, defined above).

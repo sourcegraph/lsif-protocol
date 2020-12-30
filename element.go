@@ -66,4 +66,5 @@ const (
 	EdgeTextDocumentReferences     EdgeLabel = "textDocument/references"
 	EdgeTextDocumentImplementation EdgeLabel = "textDocument/implementation"
 	EdgeWorkspaceSymbol            EdgeLabel = "workspace/symbol"
+	EdgeMember                     EdgeLabel = "member"
 )

@@ -159,6 +159,12 @@ func (e *Emitter) EmitWorkspaceSymbolEdge(outV uint64, inVs []uint64) uint64 {
 	return id
 }
 
+func (e *Emitter) EmitMember(outV uint64, inVs []uint64) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewMember(id, outV, inVs))
+	return id
+}
+
 func (e *Emitter) EmitContains(outV uint64, inVs []uint64) uint64 {
 	id := e.nextID()
 	e.writer.Write(protocol.NewContains(id, outV, inVs))
