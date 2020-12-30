@@ -147,6 +147,18 @@ func (e *Emitter) EmitTextDocumentDocumentSymbolEdge(outV, inV uint64) uint64 {
 	return id
 }
 
+func (e *Emitter) EmitSymbol(data protocol.SymbolData, locations []protocol.SymbolLocation) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewSymbol(id, data, locations))
+	return id
+}
+
+func (e *Emitter) EmitWorkspaceSymbolEdge(outV uint64, inVs []uint64) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewWorkspaceSymbolEdge(id, outV, inVs))
+	return id
+}
+
 func (e *Emitter) EmitContains(outV uint64, inVs []uint64) uint64 {
 	id := e.nextID()
 	e.writer.Write(protocol.NewContains(id, outV, inVs))
