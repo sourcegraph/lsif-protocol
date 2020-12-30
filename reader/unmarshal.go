@@ -306,89 +306,49 @@ func unmarshalDiagnosticResult(interner *Interner, line []byte) (interface{}, er
 }
 
 func UnmarshalDocumentSymbolResult(interner *Interner, line []byte) (interface{}, error) {
-	type _position struct {
-		Line      int `json:"line"`
-		Character int `json:"character"`
-	}
-	type _range struct {
-		Start _position `json:"start"`
-		End   _position `json:"end"`
-	}
-	type _result struct {
-		// union of RangeBasedDocumentSymbol and DocumentSymbol
-		ID             json.RawMessage      `json:"id"`
-		Name           string               `json:"name"`
-		Detail         string               `json:"detail"`
-		Range          _range               `json:"range"`
-		SelectionRange _range               `json:"selectionRange"`
-		FullRange      _range               `json:"fullRange"`
-		Kind           protocol.SymbolKind  `json:"kind"`
-		Tags           []protocol.SymbolTag `json:"tags"`
-		Children       []_result            `json:"children"`
-		Parent         uint64               `json:"parent"`
+	// Like RangeBasedDocumentSymbol, but accepts numeric *and* string IDs.
+	type _rangeBasedDocumentSymbol struct {
+		ID       json.RawMessage             `json:"id"`
+		Children []_rangeBasedDocumentSymbol `json:"children"`
 	}
 	var payload struct {
-		Results []_result `json:"result"`
+		Results []_rangeBasedDocumentSymbol `json:"result"`
 	}
 	if err := unmarshaller.Unmarshal(line, &payload); err != nil {
 		return nil, err
 	}
 
-	var toRangeBasedDocumentSymbol func(item _result) protocol.RangeBasedDocumentSymbol
-	toRangeBasedDocumentSymbol = func(item _result) protocol.RangeBasedDocumentSymbol {
+	var toRangeBasedDocumentSymbol func(item _rangeBasedDocumentSymbol) (protocol.RangeBasedDocumentSymbol, error)
+	toRangeBasedDocumentSymbol = func(item _rangeBasedDocumentSymbol) (protocol.RangeBasedDocumentSymbol, error) {
 		var children []protocol.RangeBasedDocumentSymbol
 		if len(item.Children) > 0 {
 			children = make([]protocol.RangeBasedDocumentSymbol, len(item.Children))
 		}
 		for i, child := range item.Children {
-			children[i] = toRangeBasedDocumentSymbol(child)
+			var err error
+			children[i], err = toRangeBasedDocumentSymbol(child)
+			if err != nil {
+				return protocol.RangeBasedDocumentSymbol{}, err
+			}
 		}
 
 		id, err := internRaw(interner, item.ID)
 		if err != nil {
-			panic(err) // TODO(sqs)
+			return protocol.RangeBasedDocumentSymbol{}, err
 		}
 
 		return protocol.RangeBasedDocumentSymbol{
 			ID:       uint64(id), // TODO(sqs): sketchy conversion
 			Children: children,
-			Parent:   item.Parent,
-		}
+		}, nil
 	}
 
-	var toDocumentSymbol func(item _result) protocol.DocumentSymbol
-	toDocumentSymbol = func(item _result) protocol.DocumentSymbol {
-		var children []protocol.DocumentSymbol
-		if len(item.Children) > 0 {
-			children = make([]protocol.DocumentSymbol, len(item.Children))
-		}
-		for i, child := range item.Children {
-			children[i] = toDocumentSymbol(child)
-		}
-		toRange := func(r _range) protocol.RangeData {
-			return protocol.RangeData{
-				Start: protocol.Pos{Line: r.Start.Line, Character: r.Start.Character},
-				End:   protocol.Pos{Line: r.End.Line, Character: r.End.Character},
-			}
-		}
-		return protocol.DocumentSymbol{
-			Name:           item.Name,
-			Detail:         item.Detail,
-			Kind:           item.Kind,
-			Tags:           item.Tags,
-			Range:          toRange(item.Range),
-			SelectionRange: toRange(item.SelectionRange),
-			Children:       children,
-			Parent:         item.Parent,
-		}
-	}
-
-	var results SymbolResultList
-	for _, result := range payload.Results {
-		if result.ID != nil {
-			results.RangeBased = append(results.RangeBased, toRangeBasedDocumentSymbol(result))
-		} else {
-			results.Inline = append(results.Inline, toDocumentSymbol(result))
+	results := make([]protocol.RangeBasedDocumentSymbol, len(payload.Results))
+	for i, result := range payload.Results {
+		var err error
+		results[i], err = toRangeBasedDocumentSymbol(result)
+		if err != nil {
+			return nil, err
 		}
 	}
 

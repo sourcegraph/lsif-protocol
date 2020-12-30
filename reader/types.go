@@ -49,9 +49,3 @@ type Diagnostic struct {
 	EndLine        int
 	EndCharacter   int
 }
-
-type SymbolResultList struct {
-	// At most 1 can be non-zero.
-	RangeBased []protocol.RangeBasedDocumentSymbol
-	Inline     []protocol.DocumentSymbol
-}

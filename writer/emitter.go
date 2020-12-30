@@ -135,17 +135,7 @@ func (e *Emitter) EmitPackageInformationEdge(outV, inV uint64) uint64 {
 	return id
 }
 
-func (e *Emitter) EmitDocumentSymbolResult(result0 []protocol.RangeBasedDocumentSymbol, result1 []protocol.DocumentSymbol) uint64 {
-	var result interface{}
-	switch {
-	case result0 != nil && result1 == nil:
-		result = result0
-	case result0 == nil && result1 != nil:
-		result = result1
-	default:
-		panic("exactly 1 result may be specified")
-	}
-
+func (e *Emitter) EmitDocumentSymbolResult(result []protocol.RangeBasedDocumentSymbol) uint64 {
 	id := e.nextID()
 	e.writer.Write(protocol.NewDocumentSymbolResult(id, result))
 	return id

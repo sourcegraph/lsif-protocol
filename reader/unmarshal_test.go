@@ -112,10 +112,12 @@ func TestUnmarshalRange(t *testing.T) {
 			End:   protocol.Pos{Line: 3, Character: 4},
 		},
 		Tag: &protocol.RangeSymbolTag{
-			Type:   "definition",
-			Text:   "foo",
-			Detail: "bar",
-			Kind:   11,
+			Type: "definition",
+			SymbolData: protocol.SymbolData{
+				Text:   "foo",
+				Detail: "bar",
+				Kind:   11,
+			},
 			FullRange: &protocol.RangeData{
 				Start: protocol.Pos{Line: 1, Character: 0},
 				End:   protocol.Pos{Line: 3, Character: 7},
@@ -224,36 +226,16 @@ func TestUnmarshalDocumentSymbolResult(t *testing.T) {
 	interner := NewInterner()
 
 	t.Run("range-based", func(t *testing.T) {
-		documentSymbolResult, err := UnmarshalDocumentSymbolResult(interner, []byte(`{"id": 39, "type": "vertex", "label": "documentSymbolResult", "result": [{"id": 7, "children": [{"id": "12"}]}, {"id": 8}]}`))
+		result, err := UnmarshalDocumentSymbolResult(interner, []byte(`{"id": 39, "type": "vertex", "label": "documentSymbolResult", "result": [{"id": 7, "children": [{"id": "12"}]}, {"id": 8}]}`))
 		if err != nil {
 			t.Fatalf("unexpected error unmarshalling document symbol result data: %s", err)
 		}
 
-		expectedDocumentSymbolResult := SymbolResultList{
-			RangeBased: []protocol.RangeBasedDocumentSymbol{
-				{ID: 7, Children: []protocol.RangeBasedDocumentSymbol{{ID: 12}}},
-				{ID: 8},
-			},
+		expected := []protocol.RangeBasedDocumentSymbol{
+			{ID: 7, Children: []protocol.RangeBasedDocumentSymbol{{ID: 12}}},
+			{ID: 8},
 		}
-		if diff := cmp.Diff(expectedDocumentSymbolResult, documentSymbolResult); diff != "" {
-			t.Errorf("unexpected document symbol result (-want +got):\n%s", diff)
-		}
-	})
-
-	t.Run("inline", func(t *testing.T) {
-		documentSymbolResult, err := UnmarshalDocumentSymbolResult(interner, []byte(`{"id": 39, "type": "vertex", "label": "documentSymbolResult", "result": [{"name": "foo"}]}`))
-		if err != nil {
-			t.Fatalf("unexpected error unmarshalling document symbol result data: %s", err)
-		}
-
-		expectedDocumentSymbolResult := SymbolResultList{
-			Inline: []protocol.DocumentSymbol{
-				{
-					Name: "foo",
-				},
-			},
-		}
-		if diff := cmp.Diff(expectedDocumentSymbolResult, documentSymbolResult); diff != "" {
+		if diff := cmp.Diff(expected, result); diff != "" {
 			t.Errorf("unexpected document symbol result (-want +got):\n%s", diff)
 		}
 	})

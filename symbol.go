@@ -1,30 +1,26 @@
 package protocol
 
+// TODO(sqs): does not support inline DocumentSymbol[] in documentSymbolResult, only supports
+// range-based ("tag") symbols.
+
+type SymbolData struct {
+	Text   string      `json:"text"`
+	Detail string      `json:"detail,omitempty"`
+	Kind   SymbolKind  `json:"kind"`
+	Tags   []SymbolTag `json:"tags,omitempty"`
+}
+
 // RangeSymbolTag is a "tag" property on a range vertex that describes the symbol enclosed by the
 // range.
 type RangeSymbolTag struct {
-	Type      string     `json:"type"`
-	Text      string     `json:"text"`
-	Detail    string     `json:"detail,omitempty"`
-	Kind      SymbolKind `json:"kind"`
+	Type string `json:"type"`
+	SymbolData
 	FullRange *RangeData `json:"fullRange,omitempty"`
 }
 
 type RangeBasedDocumentSymbol struct {
 	ID       uint64                     `json:"id"`
 	Children []RangeBasedDocumentSymbol `json:"children,omitempty"`
-	Parent   uint64                     `json:"parent,omitempty"`
-}
-
-type DocumentSymbol struct {
-	Name           string           `json:"name"`
-	Detail         string           `json:"detail,omitempty"`
-	Kind           SymbolKind       `json:"kind"`
-	Tags           []SymbolTag      `json:"tags,omitempty"`
-	Range          RangeData        `json:"range"`
-	SelectionRange RangeData        `json:"selectionRange"`
-	Children       []DocumentSymbol `json:"children,omitempty"`
-	Parent         uint64           `json:"parent,omitempty"`
 }
 
 type SymbolKind int
@@ -64,13 +60,37 @@ const (
 	Deprecated SymbolTag = 1
 )
 
-type DocumentSymbolResult struct {
+type Symbol struct {
 	Vertex
-	// TODO(sqs): make type-safe (either []RangeBasedDocumentSymbol or []DocumentSymbol)
-	Result interface{} `json:"result"`
+	SymbolData
+	Locations []SymbolLocation `json:"locations,omitempty"`
 }
 
-func NewDocumentSymbolResult(id uint64, result interface{}) DocumentSymbolResult {
+type SymbolLocation struct {
+	URI       string     `json:"uri"`
+	Range     *RangeData `json:"range,omitempty"`
+	FullRange RangeData  `json:"fullRange"`
+}
+
+func NewSymbol(id uint64, data SymbolData, locations []SymbolLocation) Symbol {
+	return Symbol{
+		Vertex: Vertex{
+			Element: Element{
+				ID:   id,
+				Type: ElementVertex,
+			},
+			Label: VertexSymbol,
+		},
+		SymbolData: data,
+	}
+}
+
+type DocumentSymbolResult struct {
+	Vertex
+	Result []RangeBasedDocumentSymbol `json:"result"`
+}
+
+func NewDocumentSymbolResult(id uint64, result []RangeBasedDocumentSymbol) DocumentSymbolResult {
 	return DocumentSymbolResult{
 		Vertex: Vertex{
 			Element: Element{
@@ -100,5 +120,25 @@ func NewTextDocumentDocumentSymbolEdge(id, outV, inV uint64) TextDocumentDocumen
 		},
 		OutV: outV,
 		InV:  inV,
+	}
+}
+
+type WorkspaceSymbol struct {
+	Edge
+	OutV uint64   `json:"outV"`
+	InVs []uint64 `json:"inVs"`
+}
+
+func NewWorkspaceSymbolEdge(id, outV uint64, inVs []uint64) WorkspaceSymbol {
+	return WorkspaceSymbol{
+		Edge: Edge{
+			Element: Element{
+				ID:   id,
+				Type: ElementEdge,
+			},
+			Label: EdgeWorkspaceSymbol,
+		},
+		OutV: outV,
+		InVs: inVs,
 	}
 }
