@@ -123,6 +123,7 @@ var vertexUnmarshalers = map[string]func(interner *Interner, line []byte) (inter
 	"hoverResult":          unmarshalHover,
 	"moniker":              unmarshalMoniker,
 	"packageInformation":   unmarshalPackageInformation,
+	"symbol":               UnmarshalSymbol,
 	"diagnosticResult":     unmarshalDiagnosticResult,
 	"documentSymbolResult": UnmarshalDocumentSymbolResult,
 }
@@ -263,6 +264,22 @@ func unmarshalPackageInformation(interner *Interner, line []byte) (interface{}, 
 		Name:    payload.Name,
 		Version: payload.Version,
 	}, nil
+}
+
+func UnmarshalSymbol(interner *Interner, line []byte) (interface{}, error) {
+	var payload struct {
+		// Omit these from the payload. TODO(sqs): use a separate Symbol type that is not the vertex
+		ID    json.RawMessage `json:"id"`
+		Type  json.RawMessage `json:"type"`
+		Label json.RawMessage `json:"label"`
+
+		protocol.Symbol
+	}
+	if err := unmarshaller.Unmarshal(line, &payload); err != nil {
+		return nil, err
+	}
+
+	return payload.Symbol, nil
 }
 
 func unmarshalDiagnosticResult(interner *Interner, line []byte) (interface{}, error) {

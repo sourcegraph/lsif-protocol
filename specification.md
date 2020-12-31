@@ -1026,9 +1026,9 @@ var B = "b"
 The Go package `foo` is represented using a `symbol` vertex, and it has 2 child symbols (for `A` and `B`).
 
 ```typescript
-{ id: 2, type: "vertex", label: "project", kind: "go" },
-{ id: 3, type: "vertex", label: "document", uri: "file:///home/sqs/src/foo/a.go", languageId: "go" },
-{ id: 4, type: "vertex", label: "document", uri: "file:///home/sqs/src/foo/b.go", languageId: "go" },
+{ id: 2, type: "vertex", label: "project", kind: "go" }
+{ id: 3, type: "vertex", label: "document", uri: "file:///home/sqs/src/foo/a.go", languageId: "go" }
+{ id: 4, type: "vertex", label: "document", uri: "file:///home/sqs/src/foo/b.go", languageId: "go" }
 
 // Symbol for Go package (which spans multiple files).
 { id: 5, type: "vertex", label: "symbol",

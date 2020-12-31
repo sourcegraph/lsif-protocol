@@ -82,6 +82,7 @@ func NewSymbol(id uint64, data SymbolData, locations []SymbolLocation) Symbol {
 			Label: VertexSymbol,
 		},
 		SymbolData: data,
+		Locations:  locations,
 	}
 }
 
