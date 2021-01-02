@@ -111,9 +111,9 @@ func (e *Emitter) EmitItemOfReferences(outV uint64, inVs []uint64, docID uint64)
 	return id
 }
 
-func (e *Emitter) EmitMoniker(kind, scheme, identifier string) uint64 {
+func (e *Emitter) EmitMoniker(kind, scheme, identifier string, unique protocol.MonikerUniqueness) uint64 {
 	id := e.nextID()
-	e.writer.Write(protocol.NewMoniker(id, kind, scheme, identifier))
+	e.writer.Write(protocol.NewMoniker(id, kind, scheme, identifier, unique))
 	return id
 }
 

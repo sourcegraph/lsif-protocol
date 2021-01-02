@@ -54,10 +54,17 @@ const (
 	TypeParameter SymbolKind = 26
 )
 
+//go:generate go build -o .bin/stringer golang.org/x/tools/cmd/stringer
+//go:generate .bin/stringer -type=SymbolTag
+
 type SymbolTag int
 
 const (
 	Deprecated SymbolTag = 1
+
+	// TODO(sqs): these are custom extensions, see https://github.com/microsoft/language-server-protocol/issues/98
+	Exported   SymbolTag = 100
+	Unexported SymbolTag = 101
 )
 
 type Symbol struct {
