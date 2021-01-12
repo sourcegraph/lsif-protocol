@@ -54,6 +54,7 @@ LSP requests that are good candidates to be supported in LSIF are:
 - [`textDocument/hover`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15#textDocument_hover)
 - [`textDocument/references`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15#textDocument_references)
 - [`textDocument/implementation`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15#textDocument_implementation)
+- [`workspace/symbol`](https://microsoft.github.io/language-server-protocol/specifications/specification-current#workspace_symbol)
 
 The corresponding LSP requests have one of the following two forms:
 
@@ -972,6 +973,108 @@ export interface Project extends V {
 ### <a href="#embeddingContents" name="embeddingContents" class="anchor">Embedding contents</a>
 
 It can be valuable to embed the contents of a document or project file into the dump as well. For example, if the content of the document is a virtual document generated from program meta data. The index format therefore supports an optional `contents` property on the `document` and `project` vertex. If used the content needs to be `base64` encoded.
+
+## Workspace requests
+
+The Language Server Protocol supports requests (such as `workspace/symbol`) that apply to the entire workspace. In LSIF, a workspace contains multiple projects, and each project's data should be as independent as possible (to allow more efficient incremental updates). For workspace requests, LSIF stores the response for each project independently, and the index server combines all projects' results.
+
+<!-- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ -->
+
+### <a href="#workspaceSymbol" name="workspaceSymbol" class="anchor">Request: `workspace/symbol`</a>
+
+<!-- TODO(sqs)
+Also use `contains` edge for document symbols.
+-->
+
+The `workspace/symbol` request returns all symbols in the workspace. <!-- TODO(sqs): it still uses the old SymbolInformation, which doesn't support hierarchies. --> To model each project's symbols, we attach each project's top-level symbols to its `project` vertex using a `workspace/symbol` edge. The edge can point to `symbol` vertices, `documentSymbolResult` vertices, and ranges with tags describing a symbol (and any combination of these). The `workspace/symbol` result is the union of all symbols from all projects in the workspace.
+
+The `symbol` vertex lets you define a symbol that does not correspond to a single document range (such as a module spanning multiple documents). The `symbol`  vertex can have `member` edges to define its child symbols.
+
+```typescript
+export interface SymbolLocation {
+  uri: string
+  range?: lsp.Range
+  fullRange: lsp.Range
+}
+
+export interface Symbol extends V {
+  label: 'symbol'
+  text: string
+  detail?: string
+  kind: lsp.SymbolKind
+  tags?: lsp.SymbolTag[]
+  locations: SymbolLocation[]
+}
+```
+
+A `symbol` vertex can be associated with monikers in the same way as for a `range` vertex.
+
+For example, consider a Go package with 2 files:
+
+```go
+// a.go
+package foo
+
+var A = 1
+
+// b.go
+package foo
+
+var B = "b"
+```
+
+The Go package `foo` is represented using a `symbol` vertex, and it has 2 child symbols (for `A` and `B`).
+
+```typescript
+{ id: 2, type: "vertex", label: "project", kind: "go" }
+{ id: 3, type: "vertex", label: "document", uri: "file:///home/sqs/src/foo/a.go", languageId: "go" }
+{ id: 4, type: "vertex", label: "document", uri: "file:///home/sqs/src/foo/b.go", languageId: "go" }
+
+// Symbol for Go package (which spans multiple files).
+{ id: 5, type: "vertex", label: "symbol",
+  text: "foo",
+  kind: 4,
+  locations: [
+    { uri: "file:///home/sqs/src/foo/a.go",
+	  fullRange: { start: { line: 0, character: 0 }, end: { line: 3, character: 9 } },
+	  range: { start: { line: 0, character: 8 }, end: { line: 0, character: 11 } } },
+	{ uri: "file:///home/sqs/src/foo/b.go",
+	  fullRange: { start: { line: 0, character: 0 }, end: { line: 3, character: 11 } },
+	  selectionRange: { start: { line: 0, character: 8 }, end: { line: 0, character: 11 } } },
+  ],
+}
+// The Go package symbol is the sole root symbol for this LSIF project.
+{ id: 20, type: "edge", label: "workspace/symbol", outV: 2, inVs: [5] }
+
+// The Go package's moniker.
+{ id: 21, type: "vertex", label: "resultSet" }
+{ id: 22, type: "vertex", label: "moniker", kind: "export", scheme: "go", identifier: "foo" }
+{ id: 23, type: "edge", label: "moniker", outV: 21, inV: 22 }
+// The Go package symbol points to the moniker.
+{ id: 24, type: "edge", label: "next", outV: 5, inV: 21 }
+
+// Document symbols that are children of the Go package.
+//
+// For a.go:
+{ id: 6, type: "vertex", label: "range",
+  start: { line: 2, character: 4 }, end: { line: 2, character: 5 },
+  tag: { type: "definition", text: "A", detail: "int", kind: 13,
+         fullRange: { start: { line: 2, character: 0 }, end: { line: 2, character: 9 } } } }
+{ id: 7, type: "vertex", label: "documentSymbolResult", result: [ { id: 6 } ] }
+{ id: 8, type: "edge", label: "textDocument/documentSymbol", outV: 3, inV: 7 }
+// For b.go:
+{ id: 9, type: "vertex", label: "range",
+  start: { line: 2, character: 4 }, end: { line: 2, character: 5 },
+  tag: { type: "definition", text: "B", detail: "string", kind: 13,
+         fullRange: { start: { line: 2, character: 0 }, end: { line: 2, character: 11 } } } }
+{ id: 10, type: "vertex", label: "documentSymbolResult", result: [ { id: 9 } ] }
+{ id: 11, type: "edge", label: "textDocument/documentSymbol", outV: 4, inV: 10 }
+
+// The document symbols are children of the (root) Go package symbol.
+{ id: 12, type: "edge", label: "member", outV: 5, inVs: [7, 10] }
+```
+
+<!-- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ -->
 
 ## <a href="#advancedConcpets" name="advancedConcpets" class="anchor">Advanced Concepts</a>
 
