@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	jsoniter "github.com/json-iterator/go"
+	protocol "github.com/sourcegraph/lsif-protocol"
 )
 
 var unmarshaller = jsoniter.ConfigFastest
@@ -36,7 +37,7 @@ func unmarshalElement(interner *Interner, line []byte) (_ Element, err error) {
 		element.Payload, err = unmarshalEdge(interner, line)
 	} else if element.Type == "vertex" {
 		if unmarshaler, ok := vertexUnmarshalers[element.Label]; ok {
-			element.Payload, err = unmarshaler(line)
+			element.Payload, err = unmarshaler(interner, line)
 		}
 	}
 
@@ -115,17 +116,19 @@ func unmarshalEdgeFast(line []byte) (Edge, bool) {
 	}, true
 }
 
-var vertexUnmarshalers = map[string]func(line []byte) (interface{}, error){
-	"metaData":           unmarshalMetaData,
-	"document":           unmarshalDocument,
-	"range":              unmarshalRange,
-	"hoverResult":        unmarshalHover,
-	"moniker":            unmarshalMoniker,
-	"packageInformation": unmarshalPackageInformation,
-	"diagnosticResult":   unmarshalDiagnosticResult,
+var vertexUnmarshalers = map[string]func(interner *Interner, line []byte) (interface{}, error){
+	"metaData":             unmarshalMetaData,
+	"document":             unmarshalDocument,
+	"range":                unmarshalRange,
+	"hoverResult":          unmarshalHover,
+	"moniker":              unmarshalMoniker,
+	"packageInformation":   unmarshalPackageInformation,
+	"symbol":               UnmarshalSymbol,
+	"diagnosticResult":     unmarshalDiagnosticResult,
+	"documentSymbolResult": UnmarshalDocumentSymbolResult,
 }
 
-func unmarshalMetaData(line []byte) (interface{}, error) {
+func unmarshalMetaData(interner *Interner, line []byte) (interface{}, error) {
 	var payload struct {
 		Version     string `json:"version"`
 		ProjectRoot string `json:"projectRoot"`
@@ -140,7 +143,7 @@ func unmarshalMetaData(line []byte) (interface{}, error) {
 	}, nil
 }
 
-func unmarshalDocument(line []byte) (interface{}, error) {
+func unmarshalDocument(interner *Interner, line []byte) (interface{}, error) {
 	var payload struct {
 		URI string `json:"uri"`
 	}
@@ -151,25 +154,12 @@ func unmarshalDocument(line []byte) (interface{}, error) {
 	return payload.URI, nil
 }
 
-func unmarshalRange(line []byte) (interface{}, error) {
-	type _position struct {
-		Line      int `json:"line"`
-		Character int `json:"character"`
-	}
-	var payload struct {
-		Start _position `json:"start"`
-		End   _position `json:"end"`
-	}
+func unmarshalRange(interner *Interner, line []byte) (interface{}, error) {
+	var payload Range
 	if err := unmarshaller.Unmarshal(line, &payload); err != nil {
 		return nil, err
 	}
-
-	return Range{
-		StartLine:      payload.Start.Line,
-		StartCharacter: payload.Start.Character,
-		EndLine:        payload.End.Line,
-		EndCharacter:   payload.End.Character,
-	}, nil
+	return payload, nil
 }
 
 var (
@@ -177,7 +167,7 @@ var (
 	CodeFence          = []byte("```")
 )
 
-func unmarshalHover(line []byte) (interface{}, error) {
+func unmarshalHover(interner *Interner, line []byte) (interface{}, error) {
 	type _hoverResult struct {
 		Contents json.RawMessage `json:"contents"`
 	}
@@ -240,7 +230,7 @@ func unmarshalHoverPart(raw json.RawMessage) ([]byte, error) {
 	return bytes.TrimSpace([]byte(objPayload.Value)), nil
 }
 
-func unmarshalMoniker(line []byte) (interface{}, error) {
+func unmarshalMoniker(interner *Interner, line []byte) (interface{}, error) {
 	var payload struct {
 		Kind       string `json:"kind"`
 		Scheme     string `json:"scheme"`
@@ -261,7 +251,7 @@ func unmarshalMoniker(line []byte) (interface{}, error) {
 	}, nil
 }
 
-func unmarshalPackageInformation(line []byte) (interface{}, error) {
+func unmarshalPackageInformation(interner *Interner, line []byte) (interface{}, error) {
 	var payload struct {
 		Name    string `json:"name"`
 		Version string `json:"version"`
@@ -276,7 +266,23 @@ func unmarshalPackageInformation(line []byte) (interface{}, error) {
 	}, nil
 }
 
-func unmarshalDiagnosticResult(line []byte) (interface{}, error) {
+func UnmarshalSymbol(interner *Interner, line []byte) (interface{}, error) {
+	var payload struct {
+		// Omit these from the payload. TODO(sqs): use a separate Symbol type that is not the vertex
+		ID    json.RawMessage `json:"id"`
+		Type  json.RawMessage `json:"type"`
+		Label json.RawMessage `json:"label"`
+
+		protocol.Symbol
+	}
+	if err := unmarshaller.Unmarshal(line, &payload); err != nil {
+		return nil, err
+	}
+
+	return payload.Symbol, nil
+}
+
+func unmarshalDiagnosticResult(interner *Interner, line []byte) (interface{}, error) {
 	type _position struct {
 		Line      int `json:"line"`
 		Character int `json:"character"`
@@ -314,6 +320,56 @@ func unmarshalDiagnosticResult(line []byte) (interface{}, error) {
 	}
 
 	return diagnostics, nil
+}
+
+func UnmarshalDocumentSymbolResult(interner *Interner, line []byte) (interface{}, error) {
+	// Like RangeBasedDocumentSymbol, but accepts numeric *and* string IDs.
+	type _rangeBasedDocumentSymbol struct {
+		ID       json.RawMessage             `json:"id"`
+		Children []_rangeBasedDocumentSymbol `json:"children"`
+	}
+	var payload struct {
+		Results []_rangeBasedDocumentSymbol `json:"result"`
+	}
+	if err := unmarshaller.Unmarshal(line, &payload); err != nil {
+		return nil, err
+	}
+
+	var toRangeBasedDocumentSymbol func(item _rangeBasedDocumentSymbol) (protocol.RangeBasedDocumentSymbol, error)
+	toRangeBasedDocumentSymbol = func(item _rangeBasedDocumentSymbol) (protocol.RangeBasedDocumentSymbol, error) {
+		var children []protocol.RangeBasedDocumentSymbol
+		if len(item.Children) > 0 {
+			children = make([]protocol.RangeBasedDocumentSymbol, len(item.Children))
+		}
+		for i, child := range item.Children {
+			var err error
+			children[i], err = toRangeBasedDocumentSymbol(child)
+			if err != nil {
+				return protocol.RangeBasedDocumentSymbol{}, err
+			}
+		}
+
+		id, err := internRaw(interner, item.ID)
+		if err != nil {
+			return protocol.RangeBasedDocumentSymbol{}, err
+		}
+
+		return protocol.RangeBasedDocumentSymbol{
+			ID:       uint64(id), // TODO(sqs): sketchy conversion
+			Children: children,
+		}, nil
+	}
+
+	results := make([]protocol.RangeBasedDocumentSymbol, len(payload.Results))
+	for i, result := range payload.Results {
+		var err error
+		results[i], err = toRangeBasedDocumentSymbol(result)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return results, nil
 }
 
 type StringOrInt string
