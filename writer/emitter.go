@@ -40,7 +40,14 @@ func (e *Emitter) EmitDocument(languageID, path string) uint64 {
 
 func (e *Emitter) EmitRange(start, end protocol.Pos) uint64 {
 	id := e.nextID()
-	e.writer.Write(protocol.NewRange(id, start, end))
+	e.writer.Write(protocol.NewRange(id, start, end, nil))
+	return id
+}
+
+// EmitRangeWithTag emits a range with a "tag" property describing a symbol.
+func (e *Emitter) EmitRangeWithTag(start, end protocol.Pos, tag *protocol.RangeSymbolTag) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewRange(id, start, end, tag))
 	return id
 }
 
@@ -104,9 +111,9 @@ func (e *Emitter) EmitItemOfReferences(outV uint64, inVs []uint64, docID uint64)
 	return id
 }
 
-func (e *Emitter) EmitMoniker(kind, scheme, identifier string) uint64 {
+func (e *Emitter) EmitMoniker(kind, scheme, identifier string, unique protocol.MonikerUniqueness) uint64 {
 	id := e.nextID()
-	e.writer.Write(protocol.NewMoniker(id, kind, scheme, identifier))
+	e.writer.Write(protocol.NewMoniker(id, kind, scheme, identifier, unique))
 	return id
 }
 
@@ -125,6 +132,36 @@ func (e *Emitter) EmitPackageInformation(packageName, scheme, version string) ui
 func (e *Emitter) EmitPackageInformationEdge(outV, inV uint64) uint64 {
 	id := e.nextID()
 	e.writer.Write(protocol.NewPackageInformationEdge(id, outV, inV))
+	return id
+}
+
+func (e *Emitter) EmitDocumentSymbolResult(result []protocol.RangeBasedDocumentSymbol) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewDocumentSymbolResult(id, result))
+	return id
+}
+
+func (e *Emitter) EmitTextDocumentDocumentSymbolEdge(outV, inV uint64) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewTextDocumentDocumentSymbolEdge(id, outV, inV))
+	return id
+}
+
+func (e *Emitter) EmitSymbol(data protocol.SymbolData, locations []protocol.SymbolLocation) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewSymbol(id, data, locations))
+	return id
+}
+
+func (e *Emitter) EmitWorkspaceSymbolEdge(outV uint64, inVs []uint64) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewWorkspaceSymbolEdge(id, outV, inVs))
+	return id
+}
+
+func (e *Emitter) EmitMember(outV uint64, inVs []uint64) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewMember(id, outV, inVs))
 	return id
 }
 
