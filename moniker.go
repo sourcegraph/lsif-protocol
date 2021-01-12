@@ -2,12 +2,23 @@ package protocol
 
 type Moniker struct {
 	Vertex
-	Kind       string `json:"kind"`
-	Scheme     string `json:"scheme"`
-	Identifier string `json:"identifier"`
+	Kind       string            `json:"kind"`
+	Scheme     string            `json:"scheme"`
+	Identifier string            `json:"identifier"`
+	Unique     MonikerUniqueness `json:"unique"`
 }
 
-func NewMoniker(id uint64, kind, scheme, identifier string) Moniker {
+type MonikerUniqueness string
+
+const (
+	UniqueInDocument MonikerUniqueness = "document"
+	UniqueInProject  MonikerUniqueness = "project"
+	UniqueInGroup    MonikerUniqueness = "group"
+	UniqueInScheme   MonikerUniqueness = "scheme"
+	UniqueInGlobal   MonikerUniqueness = "global"
+)
+
+func NewMoniker(id uint64, kind, scheme, identifier string, unique MonikerUniqueness) Moniker {
 	return Moniker{
 		Vertex: Vertex{
 			Element: Element{
@@ -19,6 +30,7 @@ func NewMoniker(id uint64, kind, scheme, identifier string) Moniker {
 		Kind:       kind,
 		Scheme:     scheme,
 		Identifier: identifier,
+		Unique:     unique,
 	}
 }
 

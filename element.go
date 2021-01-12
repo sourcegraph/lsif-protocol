@@ -27,6 +27,7 @@ const (
 	VertexDocument             VertexLabel = "document"
 	VertexMoniker              VertexLabel = "moniker"
 	VertexPackageInformation   VertexLabel = "packageInformation"
+	VertexSymbol               VertexLabel = "symbol"
 	VertexResultSet            VertexLabel = "resultSet"
 	VertexDocumentSymbolResult VertexLabel = "documentSymbolResult"
 	VertexFoldingRangeResult   VertexLabel = "foldingRangeResult"
@@ -64,4 +65,6 @@ const (
 	EdgeTextDocumentHover          EdgeLabel = "textDocument/hover"
 	EdgeTextDocumentReferences     EdgeLabel = "textDocument/references"
 	EdgeTextDocumentImplementation EdgeLabel = "textDocument/implementation"
+	EdgeWorkspaceSymbol            EdgeLabel = "workspace/symbol"
+	EdgeMember                     EdgeLabel = "member"
 )
