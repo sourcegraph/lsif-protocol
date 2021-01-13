@@ -68,9 +68,21 @@ func (e *Emitter) EmitDefinitionResult() uint64 {
 	return id
 }
 
+func (e *Emitter) EmitTypeDefinitionResult() uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewTypeDefinitionResult(id))
+	return id
+}
+
 func (e *Emitter) EmitTextDocumentDefinition(outV, inV uint64) uint64 {
 	id := e.nextID()
 	e.writer.Write(protocol.NewTextDocumentDefinition(id, outV, inV))
+	return id
+}
+
+func (e *Emitter) EmitTextDocumentTypeDefinition(outV, inV uint64) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewTextDocumentTypeDefinition(id, outV, inV))
 	return id
 }
 
