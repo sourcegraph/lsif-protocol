@@ -1,4 +1,4 @@
-module github.com/sourcegraph/lsif-protocol
+module github.com/alidn/lsif-protocol
 
 go 1.12
 
