@@ -1,8 +1,5 @@
 package protocol
 
-// TODO(sqs): does not support inline DocumentSymbol[] in documentSymbolResult, only supports
-// range-based ("tag") symbols.
-
 type SymbolData struct {
 	Text   string      `json:"text"`
 	Detail string      `json:"detail,omitempty"`
@@ -19,7 +16,7 @@ type RangeSymbolTag struct {
 }
 
 type RangeBasedDocumentSymbol struct {
-	ID       uint64                     `json:"id"`
+	ID       int                        `json:"id"`
 	Children []RangeBasedDocumentSymbol `json:"children,omitempty"`
 }
 
@@ -62,7 +59,7 @@ type SymbolTag int
 const (
 	Deprecated SymbolTag = 1
 
-	// TODO(sqs): these are custom extensions, see https://github.com/microsoft/language-server-protocol/issues/98
+	// These are custom extensions, see https://github.com/microsoft/language-server-protocol/issues/98
 	Exported   SymbolTag = 100
 	Unexported SymbolTag = 101
 )
@@ -93,6 +90,16 @@ func NewSymbol(id uint64, data SymbolData, locations []SymbolLocation) Symbol {
 	}
 }
 
+// DocumentSymbolResult is a vertex that contains the data to serve a textDocument/documentSymbol
+// response. Note the LSIF spec:
+//
+//   export interface DocumentSymbolResult extends V {
+//     label: 'documentSymbolResult';
+//     result: lsp.DocumentSymbol[] | RangeBasedDocumentSymbol[];
+//   }
+//
+// This code currently only handles the case where the result field is an array of
+// RangeBasedDocumentSymbol (lsp.DocumentSymbol[] inline symbols are not supported).
 type DocumentSymbolResult struct {
 	Vertex
 	Result []RangeBasedDocumentSymbol `json:"result"`

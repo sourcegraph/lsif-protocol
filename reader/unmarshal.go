@@ -398,7 +398,7 @@ func UnmarshalDocumentSymbolResult(interner *Interner, line []byte) (interface{}
 		}
 
 		return protocol.RangeBasedDocumentSymbol{
-			ID:       uint64(id), // TODO(sqs): sketchy conversion
+			ID:       id,
 			Children: children,
 		}, nil
 	}
