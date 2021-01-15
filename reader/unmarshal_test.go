@@ -240,3 +240,81 @@ func TestUnmarshalDocumentSymbolResult(t *testing.T) {
 		}
 	})
 }
+
+func TestUnmarshalSymbol(t *testing.T) {
+	symbol, err := UnmarshalSymbol(NewInterner(), []byte(`{
+ "id": 35,
+ "type": "vertex",
+ "label": "symbol",
+ "text": "writer",
+ "detail": "github.com\/sourcegraph\/lsif-protocol\/writer",
+ "kind": 4,
+ "tags": [
+  100
+ ],
+ "locations": [
+  {
+   "uri": "file:\/\/\/test",
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 8
+    },
+    "end": {
+     "line": 0,
+     "character": 14
+    }
+   },
+   "fullRange": {
+    "start": {
+     "line": 0,
+     "character": 0
+    },
+    "end": {
+     "line": 81,
+     "character": 2
+    }
+   }
+  }
+ ]
+}
+`))
+	if err != nil {
+		t.Fatalf("unexpected error unmarshalling symbol: %s", err)
+	}
+
+	expectedSymbol := Symbol{
+		Text:   "writer",
+		Detail: "github.com/sourcegraph/lsif-protocol/writer",
+		Kind:   4,
+		Tags:   []int{100},
+		Locations: []Location{
+			{
+				URI: "file:///test",
+				Range: &protocol.RangeData{
+					Start: protocol.Pos{
+						Line:      0,
+						Character: 8,
+					},
+					End: protocol.Pos{
+						Line:      0,
+						Character: 14,
+					},
+				},
+				FullRange: protocol.RangeData{
+					Start: protocol.Pos{
+						Line:      0,
+						Character: 0,
+					},
+					End: protocol.Pos{
+						Line:      81,
+						Character: 2,
+					},
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(expectedSymbol, symbol); diff != "" {
+		t.Errorf("unexpected symbol (-want +got):\n%s", diff)
+	}
+}

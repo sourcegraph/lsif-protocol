@@ -267,19 +267,62 @@ func unmarshalPackageInformation(interner *Interner, line []byte) (interface{}, 
 }
 
 func UnmarshalSymbol(interner *Interner, line []byte) (interface{}, error) {
-	var payload struct {
-		// Omit these from the payload. TODO(sqs): use a separate Symbol type that is not the vertex
-		ID    json.RawMessage `json:"id"`
-		Type  json.RawMessage `json:"type"`
-		Label json.RawMessage `json:"label"`
-
-		protocol.Symbol
+	type _position struct {
+		Line      int `json:"line"`
+		Character int `json:"character"`
 	}
+	type _range struct {
+		Start _position `json:"start"`
+		End   _position `json:"end"`
+	}
+	type _location struct {
+		URI       string  `json:"uri"`
+		Range     *_range `json:"range"`
+		FullRange _range  `json:"fullRange"`
+	}
+	var payload struct {
+		Text      string      `json:"text"`
+		Detail    string      `json:"detail"`
+		Kind      int         `json:"kind"`
+		Tags      []int       `json:"tags"`
+		Locations []_location `json:"locations"`
+	}
+	toRangeData := func(r *_range) protocol.RangeData {
+		return protocol.RangeData{
+			Start: protocol.Pos{
+				Line:      r.Start.Line,
+				Character: r.Start.Character,
+			},
+			End: protocol.Pos{
+				Line:      r.End.Line,
+				Character: r.End.Character,
+			},
+		}
+	}
+
 	if err := unmarshaller.Unmarshal(line, &payload); err != nil {
 		return nil, err
 	}
 
-	return payload.Symbol, nil
+	symbol := Symbol{
+		Text:      payload.Text,
+		Detail:    payload.Detail,
+		Kind:      payload.Kind,
+		Tags:      payload.Tags,
+		Locations: make([]Location, len(payload.Locations)),
+	}
+	for i, loc := range payload.Locations {
+		symbol.Locations[i] = Location{
+			URI:       loc.URI,
+			FullRange: toRangeData(&loc.FullRange),
+		}
+		if loc.Range != nil {
+			locRange := toRangeData(loc.Range)
+			symbol.Locations[i].Range = &locRange
+		}
+	}
+
+	return symbol, nil
 }
 
 func unmarshalDiagnosticResult(interner *Interner, line []byte) (interface{}, error) {

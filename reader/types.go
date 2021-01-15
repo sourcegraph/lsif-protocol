@@ -49,3 +49,17 @@ type Diagnostic struct {
 	EndLine        int
 	EndCharacter   int
 }
+
+type Symbol struct {
+	Text      string
+	Detail    string
+	Kind      int
+	Tags      []int
+	Locations []Location
+}
+
+type Location struct {
+	URI       string
+	Range     *protocol.RangeData
+	FullRange protocol.RangeData
+}
