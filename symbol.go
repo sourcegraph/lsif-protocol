@@ -16,7 +16,7 @@ type RangeSymbolTag struct {
 }
 
 type RangeBasedDocumentSymbol struct {
-	ID       int                        `json:"id"`
+	ID       uint64                     `json:"id"`
 	Children []RangeBasedDocumentSymbol `json:"children,omitempty"`
 }
 

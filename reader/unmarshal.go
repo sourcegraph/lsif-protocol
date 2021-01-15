@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 
 	jsoniter "github.com/json-iterator/go"
@@ -396,9 +397,12 @@ func UnmarshalDocumentSymbolResult(interner *Interner, line []byte) (interface{}
 		if err != nil {
 			return protocol.RangeBasedDocumentSymbol{}, err
 		}
+		if id < 0 {
+			return protocol.RangeBasedDocumentSymbol{}, fmt.Errorf("Invalid negative value for symbol ID: %d", id)
+		}
 
 		return protocol.RangeBasedDocumentSymbol{
-			ID:       id,
+			ID:       uint64(id),
 			Children: children,
 		}, nil
 	}
