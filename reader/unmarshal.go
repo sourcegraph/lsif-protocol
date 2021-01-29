@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	jsoniter "github.com/json-iterator/go"
+	protocol "github.com/sourcegraph/lsif-protocol"
 )
 
 var unmarshaller = jsoniter.ConfigFastest
@@ -116,13 +117,14 @@ func unmarshalEdgeFast(line []byte) (Edge, bool) {
 }
 
 var vertexUnmarshalers = map[string]func(line []byte) (interface{}, error){
-	"metaData":           unmarshalMetaData,
-	"document":           unmarshalDocument,
-	"range":              unmarshalRange,
-	"hoverResult":        unmarshalHover,
-	"moniker":            unmarshalMoniker,
-	"packageInformation": unmarshalPackageInformation,
-	"diagnosticResult":   unmarshalDiagnosticResult,
+	"metaData":             unmarshalMetaData,
+	"document":             unmarshalDocument,
+	"documentSymbolResult": unmarshalDocumentSymbolResult,
+	"range":                unmarshalRange,
+	"hoverResult":          unmarshalHover,
+	"moniker":              unmarshalMoniker,
+	"packageInformation":   unmarshalPackageInformation,
+	"diagnosticResult":     unmarshalDiagnosticResult,
 }
 
 func unmarshalMetaData(line []byte) (interface{}, error) {
@@ -138,6 +140,16 @@ func unmarshalMetaData(line []byte) (interface{}, error) {
 		Version:     payload.Version,
 		ProjectRoot: payload.ProjectRoot,
 	}, nil
+}
+
+func unmarshalDocumentSymbolResult(line []byte) (interface{}, error) {
+	var payload struct {
+		Result []*protocol.RangeBasedDocumentSymbol `json:"result"`
+	}
+	if err := unmarshaller.Unmarshal(line, &payload); err != nil {
+		return nil, err
+	}
+	return payload.Result, nil
 }
 
 func unmarshalDocument(line []byte) (interface{}, error) {
