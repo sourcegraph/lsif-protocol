@@ -38,10 +38,16 @@ func (e *Emitter) EmitDocument(languageID, path string) uint64 {
 	return id
 }
 
-// TODO: add arg for tag
-func (e *Emitter) EmitRange(start, end protocol.Pos) uint64 {
+func (e *Emitter) EmitRange(start, end protocol.Pos, tag *protocol.RangeDeclarationTag) uint64 {
 	id := e.nextID()
-	e.writer.Write(protocol.NewRange(id, start, end))
+	e.writer.Write(protocol.NewRange(id, start, end, tag))
+	return id
+}
+
+// EmitRangeWithTag emits a range with a "tag" property describing a symbol.
+func (e *Emitter) EmitRangeWithTag(start, end protocol.Pos, tag *protocol.RangeDeclarationTag) uint64 {
+	id := e.nextID()
+	e.writer.Write(protocol.NewRange(id, start, end, tag))
 	return id
 }
 
