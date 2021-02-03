@@ -12,6 +12,7 @@ type RangeData struct {
 }
 
 // Formerly known as RangeSymbolTag
+// TODO: rename RangeTag
 type RangeDeclarationTag struct {
 	Type      string     `json:"type"`
 	FullRange *RangeData `json:"fullRange,omitempty"`

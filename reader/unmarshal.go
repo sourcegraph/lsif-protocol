@@ -164,24 +164,11 @@ func unmarshalDocument(line []byte) (interface{}, error) {
 }
 
 func unmarshalRange(line []byte) (interface{}, error) {
-	type _position struct {
-		Line      int `json:"line"`
-		Character int `json:"character"`
-	}
-	var payload struct {
-		Start _position `json:"start"`
-		End   _position `json:"end"`
-	}
+	var payload Range
 	if err := unmarshaller.Unmarshal(line, &payload); err != nil {
 		return nil, err
 	}
-
-	return Range{
-		StartLine:      payload.Start.Line,
-		StartCharacter: payload.Start.Character,
-		EndLine:        payload.End.Line,
-		EndCharacter:   payload.End.Character,
-	}, nil
+	return payload, nil
 }
 
 var (
