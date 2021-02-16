@@ -51,6 +51,9 @@ type SymbolData struct {
 	Tags   []SymbolTag `json:"tags,omitempty"`
 }
 
+//go:generate go build -o .bin/stringer golang.org/x/tools/cmd/stringer
+//go:generate .bin/stringer -type=SymbolKind
+
 type SymbolKind int
 
 const (
