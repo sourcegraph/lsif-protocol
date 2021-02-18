@@ -1,7 +1,7 @@
 package protocol
 
 type RangeBasedDocumentSymbol struct {
-	// ID is the range ID
+	// ID is the range ID associated with this symbol.
 	ID       uint64                      `json:"id"`
 	Children []*RangeBasedDocumentSymbol `json:"children,omitempty"`
 }

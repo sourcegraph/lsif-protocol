@@ -3,7 +3,7 @@ package protocol
 type Range struct {
 	Vertex
 	RangeData
-	Tag *RangeDeclarationTag `json:"tag,omitempty"`
+	Tag *RangeTag `json:"tag,omitempty"`
 }
 
 type RangeData struct {
@@ -11,9 +11,7 @@ type RangeData struct {
 	End   Pos `json:"end"`
 }
 
-// Formerly known as RangeSymbolTag
-// TODO: rename RangeTag
-type RangeDeclarationTag struct {
+type RangeTag struct {
 	Type      string     `json:"type"`
 	FullRange *RangeData `json:"fullRange,omitempty"`
 	SymbolData
@@ -24,7 +22,7 @@ type Pos struct {
 	Character int `json:"character"`
 }
 
-func NewRange(id uint64, start, end Pos, tag *RangeDeclarationTag) Range {
+func NewRange(id uint64, start, end Pos, tag *RangeTag) Range {
 	return Range{
 		Vertex: Vertex{
 			Element: Element{

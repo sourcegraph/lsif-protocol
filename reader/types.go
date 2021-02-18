@@ -23,7 +23,7 @@ type MetaData struct {
 
 type Range struct {
 	protocol.RangeData
-	Tag *protocol.RangeDeclarationTag `json:"tag,omitempty"`
+	Tag *protocol.RangeTag `json:"tag,omitempty"`
 }
 
 type ResultSet struct{}
