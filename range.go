@@ -11,6 +11,9 @@ type RangeData struct {
 	End   Pos `json:"end"`
 }
 
+// RangeTag represents a tag associated with a range that provides metadata about the symbol defined
+// at the range. See
+// https://microsoft.github.io/language-server-protocol/specifications/lsif/0.4.0/specification/#documentSymbol
 type RangeTag struct {
 	Type      string     `json:"type"`
 	FullRange *RangeData `json:"fullRange,omitempty"`

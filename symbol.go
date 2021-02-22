@@ -47,6 +47,9 @@ func NewDocumentSymbolEdge(id, inV, outV uint64) DocumentSymbolEdge {
 	}
 }
 
+// SymbolData defines metadata associated with a symbol included in a range tag. It is embedded in
+// the Range struct. See
+// https://microsoft.github.io/language-server-protocol/specifications/lsif/0.4.0/specification/#documentSymbol.
 type SymbolData struct {
 	Text   string      `json:"text"`
 	Detail string      `json:"detail,omitempty"`
