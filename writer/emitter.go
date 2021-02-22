@@ -38,10 +38,8 @@ func (e *Emitter) EmitDocument(languageID, path string) uint64 {
 	return id
 }
 
-func (e *Emitter) EmitRange(start, end protocol.Pos, tag *protocol.RangeTag) uint64 {
-	id := e.nextID()
-	e.writer.Write(protocol.NewRange(id, start, end, tag))
-	return id
+func (e *Emitter) EmitRange(start, end protocol.Pos) uint64 {
+	return e.EmitRangeWithTag(start, end, nil)
 }
 
 // EmitRangeWithTag emits a range with a "tag" property describing a symbol.
