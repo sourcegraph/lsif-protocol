@@ -8,7 +8,10 @@ type RangeBasedDocumentSymbol struct {
 
 type DocumentSymbolResult struct {
 	Vertex
-	Result []*RangeBasedDocumentSymbol `json:"result"` // TODO: lsp.DocumentSymbol
+
+	// Note: the LSIF spec also says Result can be an array of lsp.DocumentSymbol instances, but we
+	// don't yet support that here.
+	Result []*RangeBasedDocumentSymbol `json:"result"`
 }
 
 func NewDocumentSymbolResult(id uint64, result []*RangeBasedDocumentSymbol) DocumentSymbolResult {
