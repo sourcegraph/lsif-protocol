@@ -12,12 +12,17 @@ type RangeData struct {
 }
 
 // RangeTag represents a tag associated with a range that provides metadata about the symbol defined
-// at the range. See
+// at the range. Some of the fields may be empty depending on the value of Type. See
 // https://microsoft.github.io/language-server-protocol/specifications/lsif/0.4.0/specification/#documentSymbol
 type RangeTag struct {
 	Type      string     `json:"type"`
+	Text      string     `json:"text"`
+	Kind      SymbolKind `json:"kind"`
 	FullRange *RangeData `json:"fullRange,omitempty"`
-	SymbolData
+	Detail    string     `json:"detail,omitempty"`
+
+	// Tags is a custom extension, see https://github.com/microsoft/language-server-protocol/issues/1209
+	Tags []SymbolTag `json:"tags,omitempty"`
 }
 
 type Pos struct {

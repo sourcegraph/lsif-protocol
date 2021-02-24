@@ -47,19 +47,11 @@ func NewDocumentSymbolEdge(id, inV, outV uint64) DocumentSymbolEdge {
 	}
 }
 
-// SymbolData defines metadata associated with a symbol included in a range tag. It is embedded in
-// the Range struct. See
-// https://microsoft.github.io/language-server-protocol/specifications/lsif/0.4.0/specification/#documentSymbol.
-type SymbolData struct {
-	Text   string      `json:"text"`
-	Detail string      `json:"detail,omitempty"`
-	Kind   SymbolKind  `json:"kind"`
-	Tags   []SymbolTag `json:"tags,omitempty"`
-}
-
 //go:generate go build -o .bin/stringer golang.org/x/tools/cmd/stringer
 //go:generate .bin/stringer -type=SymbolKind
 
+// SymbolKind corresponds to lsp.SymbolKind in the LSP spec. See
+// https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#textDocument_documentSymbol
 type SymbolKind int
 
 const (
@@ -94,6 +86,8 @@ const (
 //go:generate go build -o .bin/stringer golang.org/x/tools/cmd/stringer
 //go:generate .bin/stringer -type=SymbolTag
 
+// SymbolTag corresponds to lsp.SymbolTag in the LSP spec. See
+// https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#textDocument_documentSymbol
 type SymbolTag int
 
 const (
