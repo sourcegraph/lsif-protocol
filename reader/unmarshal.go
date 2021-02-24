@@ -164,11 +164,70 @@ func unmarshalDocument(line []byte) (interface{}, error) {
 }
 
 func unmarshalRange(line []byte) (interface{}, error) {
-	var payload Range
+	type _position struct {
+		Line      int `json:"line"`
+		Character int `json:"character"`
+	}
+	type _range struct {
+		Start _position `json:"start"`
+		End   _position `json:"end"`
+	}
+	type _tag struct {
+		Type      string               `json:"type"`
+		Text      string               `json:"text"`
+		Kind      int                  `json:"kind"`
+		FullRange *_range              `json:"fullRange,omitempty"`
+		Detail    string               `json:"detail,omitempty"`
+		Tags      []protocol.SymbolTag `json:"tags,omitempty"`
+	}
+	var payload struct {
+		Start _position `json:"start"`
+		End   _position `json:"end"`
+		Tag   *_tag     `json:"tag"`
+	}
+
 	if err := unmarshaller.Unmarshal(line, &payload); err != nil {
 		return nil, err
 	}
-	return payload, nil
+
+	var tag *protocol.RangeTag
+	if payload.Tag != nil {
+		var fullRange *protocol.RangeData
+		if payload.Tag.FullRange != nil {
+			fullRange = &protocol.RangeData{
+				Start: protocol.Pos{
+					Line:      payload.Tag.FullRange.Start.Line,
+					Character: payload.Tag.FullRange.Start.Character,
+				},
+				End: protocol.Pos{
+					Line:      payload.Tag.FullRange.End.Line,
+					Character: payload.Tag.FullRange.End.Character,
+				},
+			}
+		}
+		tag = &protocol.RangeTag{
+			Type:      payload.Tag.Type,
+			Text:      payload.Tag.Text,
+			Kind:      protocol.SymbolKind(payload.Tag.Kind),
+			FullRange: fullRange,
+			Detail:    payload.Tag.Detail,
+			Tags:      payload.Tag.Tags,
+		}
+	}
+
+	return Range{
+		RangeData: protocol.RangeData{
+			Start: protocol.Pos{
+				Line:      payload.Start.Line,
+				Character: payload.Start.Character,
+			},
+			End: protocol.Pos{
+				Line:      payload.End.Line,
+				Character: payload.End.Character,
+			},
+		},
+		Tag: tag,
+	}, nil
 }
 
 var (
