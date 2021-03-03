@@ -1,4 +1,4 @@
-## ⚠️ This project  has been merged into github.com/sourcegraph/sourcegraph ⚠️
+# ⚠️ This project  has been merged into [github.com/sourcegraph/sourcegraph](https://github.com/sourcegraph/sourcegraph) ⚠️
 
 # LSIF protocol utilities for Go
 
